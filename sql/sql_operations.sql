@@ -1,49 +1,58 @@
 USE FoodExpressDB;
 
 -- =========================
--- BASIC SELECT QUERIES
+-- SELECT
 -- =========================
 
 -- View all customers
 SELECT * FROM customers;
 
--- View all vendors
+-- View all vendors/restaurants
 SELECT * FROM vendors;
 
 -- View all menu items
 SELECT * FROM menu_items;
+
+-- View all orders
+SELECT * FROM orders;
+
+-- View all order items, including quantity
+SELECT * FROM order_items;
+
+-- View all deliveries
+SELECT * FROM deliveries;
 
 
 -- =========================
 -- WHERE FILTERING
 -- =========================
 
--- View only available menu items
-SELECT *
-FROM menu_items
-WHERE is_available = TRUE;
-
--- View orders with status 'Placed'
+-- View completed orders
 SELECT *
 FROM orders
-WHERE order_status = 'Ready';
+WHERE order_status = 'Completed';
+
+-- View menu items over $10
+SELECT *
+FROM menu_items
+WHERE price > 10;
 
 
 -- =========================
 -- ORDER BY
 -- =========================
 
--- View menu items ordered by price
+-- View menu items from highest to lowest price
 SELECT *
 FROM menu_items
 ORDER BY price DESC;
 
 
 -- =========================
--- JOIN QUERIES
+-- JOIN QUERY #1
+-- Customer Orders
 -- =========================
 
--- View customer orders
 SELECT
     o.order_id,
     c.first_name,
@@ -57,7 +66,12 @@ ON o.customer_id = c.customer_id
 JOIN vendors v
 ON o.vendor_id = v.vendor_id;
 
--- View deliveries with driver information
+
+-- =========================
+-- JOIN QUERY #2
+-- Deliveries and Drivers
+-- =========================
+
 SELECT
     d.delivery_id,
     o.order_id,
@@ -72,23 +86,44 @@ ON d.driver_id = dr.driver_id;
 
 
 -- =========================
--- AGGREGATE QUERIES
+-- JOIN QUERY #3
+-- Order Items with Menu Details
 -- =========================
 
--- Count total orders
+SELECT
+    oi.order_id,
+    mi.item_name,
+    oi.quantity,
+    oi.unit_price,
+    (oi.quantity * oi.unit_price) AS line_total
+FROM order_items oi
+JOIN menu_items mi
+ON oi.menu_item_id = mi.menu_item_id;
+
+
+-- =========================
+-- AGGREGATE QUERY #1
+-- COUNT
+-- =========================
+
 SELECT COUNT(*) AS total_orders
 FROM orders;
 
--- Calculate total revenue
+
+-- =========================
+-- AGGREGATE QUERY #2
+-- SUM
+-- =========================
+
 SELECT SUM(total_amount) AS total_revenue
 FROM orders;
 
 
 -- =========================
--- GROUP BY QUERIES
+-- GROUP BY QUERY #1
+-- Orders Per Vendor
 -- =========================
 
--- Total orders per vendor
 SELECT
     v.vendor_name,
     COUNT(o.order_id) AS total_orders
@@ -97,7 +132,12 @@ LEFT JOIN orders o
 ON v.vendor_id = o.vendor_id
 GROUP BY v.vendor_name;
 
--- Revenue by vendor
+
+-- =========================
+-- GROUP BY QUERY #2
+-- Revenue Per Vendor
+-- =========================
+
 SELECT
     v.vendor_name,
     SUM(o.total_amount) AS revenue
@@ -108,29 +148,48 @@ GROUP BY v.vendor_name;
 
 
 -- =========================
--- UPDATE QUERIES
+-- INSERT EXAMPLE
+-- Simulates placing a new order
 -- =========================
 
--- Update order status
+INSERT INTO orders (customer_id, vendor_id, order_status, total_amount)
+VALUES (1, 1, 'Placed', 25.98);
+
+INSERT INTO order_items (order_id, menu_item_id, quantity, unit_price)
+VALUES (LAST_INSERT_ID(), 4, 2, 12.99);
+
+
+-- =========================
+-- UPDATE EXAMPLE
+-- Restaurant updates order status
+-- =========================
+
 UPDATE orders
 SET order_status = 'Completed'
 WHERE order_id = 1;
 
--- Update delivery status
+
+-- =========================
+-- UPDATE EXAMPLE
+-- Driver updates delivery status
+-- =========================
+
 UPDATE deliveries
-SET delivery_status = 'Delivered'
+SET delivery_status = 'Delivered',
+    delivered_at = NOW()
 WHERE delivery_id = 1;
 
 
 -- =========================
--- DELETE QUERIES
+-- DELETE EXAMPLE
+-- Delete an order and related records
 -- =========================
 
--- Delete a delivery
 DELETE FROM deliveries
-WHERE delivery_id = 3;
+WHERE order_id = 1;
 
--- Delete an order item
 DELETE FROM order_items
-WHERE order_id = 3
-AND menu_item_id = 7;
+WHERE order_id = 1;
+
+DELETE FROM orders
+WHERE order_id = 1;
