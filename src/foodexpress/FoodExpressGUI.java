@@ -14,6 +14,8 @@ public class FoodExpressGUI extends JFrame {
 
     private JTable menuTable;
     private DefaultTableModel menuModel;
+    private JComboBox<String> customerDropdown;
+private JSpinner quantitySpinner;
 
     private final Color navy = new Color(25, 35, 55);
     private final Color orange = new Color(230, 126, 34);
@@ -68,6 +70,24 @@ public class FoodExpressGUI extends JFrame {
 
         JPanel customerButtonPanel = new JPanel();
         customerButtonPanel.setBackground(lightBg);
+        JLabel customerLabel = new JLabel("Customer:");
+customerLabel.setFont(new Font("Arial", Font.BOLD, 13));
+
+customerDropdown = new JComboBox<>();
+loadCustomersIntoDropdown();
+
+JLabel quantityLabel = new JLabel("Quantity:");
+quantityLabel.setFont(new Font("Arial", Font.BOLD, 13));
+
+quantitySpinner = new JSpinner(
+        new SpinnerNumberModel(1, 1, 20, 1)
+);
+
+customerButtonPanel.add(customerLabel);
+customerButtonPanel.add(customerDropdown);
+
+customerButtonPanel.add(quantityLabel);
+customerButtonPanel.add(quantitySpinner);
 
         JButton loadVendorsButton = styledButton("Browse Restaurants");
         JButton loadMenuButton = styledButton("View Selected Menu");
@@ -423,6 +443,40 @@ public class FoodExpressGUI extends JFrame {
             JOptionPane.showMessageDialog(this, "Error loading restaurants.");
         }
     }
+    private void loadCustomersIntoDropdown() {
+
+    try {
+
+        Connection conn = DBConnection.getConnection();
+        Statement stmt = conn.createStatement();
+
+        ResultSet rs = stmt.executeQuery(
+                "SELECT customer_id, first_name, last_name FROM customers"
+        );
+
+        while (rs.next()) {
+
+            String customer = rs.getInt("customer_id") +
+                    " - " +
+                    rs.getString("first_name") +
+                    " " +
+                    rs.getString("last_name");
+
+            customerDropdown.addItem(customer);
+        }
+
+        conn.close();
+
+    } catch (Exception e) {
+
+        e.printStackTrace();
+
+        JOptionPane.showMessageDialog(
+                this,
+                "Error loading customers."
+        );
+    }
+}
 
     private void loadMenuItems() {
         int selectedRow = vendorTable.getSelectedRow();
@@ -472,12 +526,37 @@ public class FoodExpressGUI extends JFrame {
             return;
         }
 
-        int customerId = 1;
+       
         int driverId = 1;
 
         int vendorId = (int) vendorModel.getValueAt(vendorRow, 0);
         int menuItemId = (int) menuModel.getValueAt(menuRow, 0);
-        double price = (double) menuModel.getValueAt(menuRow, 3);
+       String selectedCustomer =
+        (String) customerDropdown.getSelectedItem();
+
+if (selectedCustomer == null) {
+
+    JOptionPane.showMessageDialog(
+            this,
+            "Please select a customer."
+    );
+
+    return;
+}
+
+int customerId =
+        Integer.parseInt(
+                selectedCustomer.split(" - ")[0]
+        );
+
+int quantity =
+        (int) quantitySpinner.getValue();
+
+double unitPrice =
+        (double) menuModel.getValueAt(menuRow, 3);
+
+double totalPrice =
+        unitPrice * quantity;
 
         try {
             Connection conn = DBConnection.getConnection();
@@ -486,7 +565,7 @@ public class FoodExpressGUI extends JFrame {
             stmt.executeUpdate(
                     "INSERT INTO orders " +
                             "(customer_id, vendor_id, order_status, total_amount) " +
-                            "VALUES (" + customerId + ", " + vendorId + ", 'Placed', " + price + ")"
+                            "VALUES (" + customerId + ", " + vendorId + ", 'Placed', " + totalPrice + ")"
             );
 
             ResultSet rs = stmt.executeQuery("SELECT MAX(order_id) AS last_id FROM orders");
@@ -500,7 +579,12 @@ public class FoodExpressGUI extends JFrame {
             stmt.executeUpdate(
                     "INSERT INTO order_items " +
                             "(order_id, menu_item_id, quantity, unit_price) " +
-                            "VALUES (" + orderId + ", " + menuItemId + ", 1, " + price + ")"
+                           "VALUES (" +
+        orderId + ", " +
+        menuItemId + ", " +
+        quantity + ", " +
+        unitPrice +
+        ")"
             );
 
             stmt.executeUpdate(
