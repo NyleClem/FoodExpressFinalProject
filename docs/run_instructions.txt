@@ -1,0 +1,37 @@
+Food Express Delivery Platform
+Run Instructions
+
+Requirements:
+- Java JDK installed
+- MySQL Workbench installed
+- MySQL Server running
+
+Database Setup:
+1. Open MySQL Workbench.
+2. Run the schema.sql file located in the sql folder.
+3. Run the sample_data.sql file located in the sql folder.
+
+Database Connection:
+The application connects using:
+- Database Name: FoodExpressDB
+- Port: 3306
+- Username: root
+
+Update the password field in DBConnection.java with your local MySQL password before running the application.
+
+Compile the Application:
+Open terminal in the project folder and run:
+
+javac -cp "lib/*" -d out src/foodexpress/*.java
+
+Create Executable JAR:
+jar cfe jar/FoodExpressApp.jar foodexpress.Main -C out .
+
+Run the Application:
+java -cp "jar/FoodExpressApp.jar;lib/*" foodexpress.Main
+
+Application Features:
+- Customer can browse restaurants and place orders
+- Restaurant can manage order statuses
+- Driver can update delivery statuses
+- Admin can view and delete records
