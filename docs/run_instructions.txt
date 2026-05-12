@@ -28,10 +28,12 @@ Create Executable JAR:
 jar cfe jar/FoodExpressApp.jar foodexpress.Main -C out .
 
 Run the Application:
-java -cp "jar/FoodExpressApp.jar;lib/*" foodexpress.Main
+
+java -cp "jar/FoodExpressApp.jar;lib/*" foodexpress.Main  //WINDOWS
+java -cp "jar/FoodExpressApp.jar:lib/*" foodexpress.Main  //MAC
 
 Application Features:
-- Customer can browse restaurants and place orders
+- Customer can browse restaurants and place orders 
 - Restaurant can manage order statuses
 - Driver can update delivery statuses
 - Admin can view and delete records
